@@ -38,7 +38,19 @@ const CreateBlog = () => {
             toast.success('Blog created successfully!');
             navigate('/my-blogs');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to create blog');
+            console.error('Create blog error:', error.response?.data);
+            
+            // Display specific validation errors
+            if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+                error.response.data.errors.forEach(err => {
+                    toast.error(err.msg || err.message);
+                });
+            } else {
+                const errorMsg = error.response?.data?.error || 
+                                error.response?.data?.message || 
+                                'Failed to create blog';
+                toast.error(errorMsg);
+            }
         } finally {
             setLoading(false);
         }

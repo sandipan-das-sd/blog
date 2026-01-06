@@ -28,10 +28,12 @@ export const createBlog = async (req, res) => {
             data: blog
         });
     } catch (error) {
+        console.error('Create blog error:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Error creating blog post', 
-            error: error.message 
+            error: error.message,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 };

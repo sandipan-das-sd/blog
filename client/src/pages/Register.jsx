@@ -38,13 +38,19 @@ const Register = () => {
             toast.success('Registration successful!');
             navigate('/');
         } catch (error) {
+            console.error('Registration error:', error.response?.data);
+            
             // Display specific validation errors
             if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
                 error.response.data.errors.forEach(err => {
                     toast.error(err.msg || err.message);
                 });
             } else {
-                toast.error(error.response?.data?.message || 'Registration failed');
+                // Show the detailed error message
+                const errorMsg = error.response?.data?.error || 
+                                error.response?.data?.message || 
+                                'Registration failed';
+                toast.error(errorMsg);
             }
         } finally {
             setLoading(false);
