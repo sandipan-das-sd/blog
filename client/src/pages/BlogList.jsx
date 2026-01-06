@@ -75,7 +75,11 @@ const BlogList = () => {
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {blogs.map((blog) => (
-                    <div key={blog._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                    <Link 
+                        key={blog._id} 
+                        to={`/blogs/${blog._id}`}
+                        className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow block"
+                    >
                         {blog.coverImage && (
                             <img
                                 src={blog.coverImage}
@@ -84,10 +88,8 @@ const BlogList = () => {
                             />
                         )}
                         <div className="p-6">
-                            <h2 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
-                                <Link to={`/blogs/${blog._id}`} className="hover:text-blue-600">
-                                    {blog.title}
-                                </Link>
+                            <h2 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600">
+                                {blog.title}
                             </h2>
                             <p className="text-gray-600 mb-4 line-clamp-3">
                                 {blog.excerpt || blog.content.substring(0, 150)}...
@@ -115,7 +117,7 @@ const BlogList = () => {
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
 

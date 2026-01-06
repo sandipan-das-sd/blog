@@ -16,17 +16,23 @@ const BlogDetail = () => {
     const [replyTo, setReplyTo] = useState(null);
     const [editingComment, setEditingComment] = useState(null);
 
+    console.log('BlogDetail component loaded, ID:', id);
+
     useEffect(() => {
+        console.log('useEffect running for ID:', id);
         fetchBlog();
         fetchComments();
     }, [id]);
 
     const fetchBlog = async () => {
         try {
+            console.log('Fetching blog with ID:', id);
             const response = await blogAPI.getById(id);
+            console.log('Blog data:', response.data);
             setBlog(response.data.data);
         } catch (error) {
-            toast.error('Failed to fetch blog');
+            console.error('Failed to fetch blog:', error);
+            toast.error(error.response?.data?.message || 'Failed to fetch blog');
             navigate('/blogs');
         } finally {
             setLoading(false);
@@ -35,10 +41,12 @@ const BlogDetail = () => {
 
     const fetchComments = async () => {
         try {
-            const response = await commentAPI.getByBlog(id);
+            const response = await commentAPI.getByPost(id);
+            console.log('Fetched comments:', response.data.data);
             setComments(response.data.data);
         } catch (error) {
-            console.error('Failed to fetch comments');
+            console.error('Failed to fetch comments:', error);
+            toast.error(error.response?.data?.message || 'Failed to fetch comments');
         }
     };
 
@@ -68,18 +76,30 @@ const BlogDetail = () => {
                 toast.success('Comment updated');
                 setEditingComment(null);
             } else {
-                await commentAPI.create({
-                    blog: id,
-                    content: commentText,
-                    parentComment: replyTo
-                });
+                const commentData = { content: commentText };
+                if (replyTo) {
+                    commentData.parentComment = replyTo;
+                }
+                await commentAPI.create(id, commentData);
                 toast.success('Comment added');
                 setReplyTo(null);
             }
             setCommentText('');
             fetchComments();
         } catch (error) {
-            toast.error('Failed to post comment');
+            console.error('Comment error:', error.response?.data);
+            
+            // Display specific validation errors
+            if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+                error.response.data.errors.forEach(err => {
+                    toast.error(err.msg || err.message);
+                });
+            } else {
+                const errorMsg = error.response?.data?.error || 
+                                error.response?.data?.message || 
+                                'Failed to post comment';
+                toast.error(errorMsg);
+            }
         }
     };
 

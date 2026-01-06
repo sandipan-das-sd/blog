@@ -38,7 +38,10 @@ export const createComment = async (req, res) => {
         await comment.populate('author', 'username name avatar');
 
         // Invalidate cache
-        cacheService.invalidateCache([`cache:/api/blogs/${postId}`]);
+        cacheService.invalidateCache([
+            `cache:/api/blogs/${postId}`,
+            `cache:/api/comments/post/${postId}`
+        ]);
 
         res.status(201).json({
             success: true,
@@ -46,10 +49,12 @@ export const createComment = async (req, res) => {
             data: comment
         });
     } catch (error) {
+        console.error('Create comment error:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Error creating comment', 
-            error: error.message 
+            error: error.message,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 };
@@ -171,7 +176,10 @@ export const updateComment = async (req, res) => {
         await comment.populate('author', 'username name avatar');
 
         // Invalidate cache
-        cacheService.invalidateCache([`cache:/api/blogs/${comment.post}`]);
+        cacheService.invalidateCache([
+            `cache:/api/blogs/${comment.post}`,
+            `cache:/api/comments/post/${comment.post}`
+        ]);
 
         res.json({
             success: true,
@@ -217,7 +225,10 @@ export const deleteComment = async (req, res) => {
         await comment.deleteOne();
 
         // Invalidate cache
-        cacheService.invalidateCache([`cache:/api/blogs/${postId}`]);
+        cacheService.invalidateCache([
+            `cache:/api/blogs/${postId}`,
+            `cache:/api/comments/post/${postId}`
+        ]);
 
         res.json({
             success: true,
