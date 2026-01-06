@@ -38,7 +38,14 @@ const Register = () => {
             toast.success('Registration successful!');
             navigate('/');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Registration failed');
+            // Display specific validation errors
+            if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+                error.response.data.errors.forEach(err => {
+                    toast.error(err.msg || err.message);
+                });
+            } else {
+                toast.error(error.response?.data?.message || 'Registration failed');
+            }
         } finally {
             setLoading(false);
         }
@@ -103,6 +110,9 @@ const Register = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                             />
+                            <p className="mt-1 text-xs text-gray-500">
+                                Must be 6+ characters with uppercase, lowercase, and number
+                            </p>
                         </div>
                         <div>
                             <input
