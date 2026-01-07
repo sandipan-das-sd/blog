@@ -1,6 +1,7 @@
 import Blog from '../models/Blogs.js';
 import Comment from '../models/Comment.js';
 import cacheService from '../services/cacheService.js';
+import socketService from '../services/socketService.js';
 
 // Create new blog post
 export const createBlog = async (req, res) => {
@@ -21,6 +22,11 @@ export const createBlog = async (req, res) => {
 
         // Invalidate blog list cache
         cacheService.invalidateCache(['cache:/api/blogs']);
+
+        // Emit real-time notification for new published blog
+        if (status === 'published') {
+            socketService.emitNewBlog(blog);
+        }
 
         res.status(201).json({
             success: true,
@@ -111,13 +117,19 @@ export const getAllBlogs = async (req, res) => {
     }
 };
 
-// Get single blog by ID
+// Get single blog by ID or slug
 export const getBlogById = async (req, res) => {
     try {
-        const blog = await Blog.findOne({ 
-            _id: req.params.id, 
-            isDeleted: false 
-        })
+        const identifier = req.params.id;
+        
+        // Check if identifier is a valid MongoDB ObjectId or a slug
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(identifier);
+        
+        const query = isObjectId 
+            ? { _id: identifier, isDeleted: false }
+            : { slug: identifier, isDeleted: false };
+        
+        const blog = await Blog.findOne(query)
         .populate('author', 'username name avatar email')
         .populate({
             path: 'comments',
@@ -171,10 +183,14 @@ export const getBlogById = async (req, res) => {
 // Update blog post
 export const updateBlog = async (req, res) => {
     try {
-        const blog = await Blog.findOne({ 
-            _id: req.params.id, 
-            isDeleted: false 
-        });
+        const identifier = req.params.id;
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(identifier);
+        
+        const query = isObjectId 
+            ? { _id: identifier, isDeleted: false }
+            : { slug: identifier, isDeleted: false };
+
+        const blog = await Blog.findOne(query);
 
         if (!blog) {
             return res.status(404).json({ 
@@ -203,13 +219,16 @@ export const updateBlog = async (req, res) => {
         if (status !== undefined) updates.status = status;
 
         const updatedBlog = await Blog.findByIdAndUpdate(
-            req.params.id,
+            blog._id,
             updates,
             { new: true, runValidators: true }
         ).populate('author', 'username name avatar');
 
         // Invalidate cache
         cacheService.invalidateCache(['cache:/api/blogs']);
+
+        // Emit real-time update
+        socketService.emitBlogUpdate(updatedBlog);
 
         res.json({
             success: true,
@@ -228,10 +247,14 @@ export const updateBlog = async (req, res) => {
 // Soft delete blog post
 export const deleteBlog = async (req, res) => {
     try {
-        const blog = await Blog.findOne({ 
-            _id: req.params.id, 
-            isDeleted: false 
-        });
+        const identifier = req.params.id;
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(identifier);
+        
+        const query = isObjectId 
+            ? { _id: identifier, isDeleted: false }
+            : { slug: identifier, isDeleted: false };
+
+        const blog = await Blog.findOne(query);
 
         if (!blog) {
             return res.status(404).json({ 
@@ -253,6 +276,9 @@ export const deleteBlog = async (req, res) => {
 
         // Invalidate cache
         cacheService.invalidateCache(['cache:/api/blogs']);
+
+        // Emit real-time deletion
+        socketService.emitBlogDelete(blog._id);
 
         res.json({
             success: true,

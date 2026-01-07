@@ -14,6 +14,7 @@ import {
     createBlogValidation, 
     updateBlogValidation, 
     mongoIdValidation,
+    idOrSlugValidation,
     paginationValidation 
 } from '../middleware/validators.js';
 import { logActivity } from '../middleware/activityLogger.js';
@@ -36,7 +37,7 @@ router.get('/trending',
 
 router.get('/:id', 
     optionalAuth, 
-    mongoIdValidation,
+    idOrSlugValidation,
     getBlogById
 );
 
@@ -56,7 +57,7 @@ router.get('/my/posts',
 
 router.put('/:id', 
     authenticate, 
-    mongoIdValidation,
+    idOrSlugValidation,
     updateBlogValidation,
     logActivity('update_post', 'blog'),
     updateBlog
@@ -64,7 +65,7 @@ router.put('/:id',
 
 router.delete('/:id', 
     authenticate, 
-    mongoIdValidation,
+    idOrSlugValidation,
     logActivity('delete_post', 'blog'),
     deleteBlog
 );
@@ -73,7 +74,7 @@ router.delete('/:id',
 router.post('/:id/restore', 
     authenticate,
     isAdmin,
-    mongoIdValidation,
+    idOrSlugValidation,
     logActivity('admin_action', 'blog'),
     restoreBlog
 );

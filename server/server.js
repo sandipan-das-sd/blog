@@ -5,12 +5,16 @@ import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import rateLimit from 'express-rate-limit';
+import { createServer } from 'http';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+
+// Import services
+import socketService from './services/socketService.js';
 
 // Import auth controller to initialize passport strategies
 import './controller/authController.js';
@@ -98,9 +102,19 @@ app.use((err, req, res, next) => {
     });
 });
 
+// Create HTTP server
+const httpServer = createServer(app);
+
+// Initialize Socket.io
+socketService.initialize(httpServer);
+
+// Attach socket service to app for use in controllers
+app.set('socketService', socketService);
+
 // Start server
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🌐 API Base URL: http://localhost:${PORT}/api`);
+    console.log(`🔌 Socket.io is ready for real-time notifications`);
 });

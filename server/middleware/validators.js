@@ -142,6 +142,21 @@ export const mongoIdValidation = [
     validate
 ];
 
+// ID or Slug validation (for blog routes)
+export const idOrSlugValidation = [
+    param('id')
+        .custom((value) => {
+            // Allow MongoDB ObjectId format or slug format
+            const isMongoId = /^[0-9a-fA-F]{24}$/.test(value);
+            const isSlug = /^[a-z0-9-]+$/.test(value);
+            if (!isMongoId && !isSlug) {
+                throw new Error('Invalid ID or slug format');
+            }
+            return true;
+        }),
+    validate
+];
+
 // Pagination validation
 export const paginationValidation = [
     query('page')

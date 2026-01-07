@@ -1,6 +1,7 @@
 import Comment from '../models/Comment.js';
 import Blog from '../models/Blogs.js';
 import cacheService from '../services/cacheService.js';
+import socketService from '../services/socketService.js';
 
 // Create comment
 export const createComment = async (req, res) => {
@@ -42,6 +43,19 @@ export const createComment = async (req, res) => {
             `cache:/api/blogs/${postId}`,
             `cache:/api/comments/post/${postId}`
         ]);
+
+        // Emit real-time notification
+        socketService.emitNewComment(postId, comment);
+
+        // Notify blog author if comment is not from them
+        if (post.author.toString() !== req.user._id.toString()) {
+            socketService.notifyUser(post.author, {
+                type: 'new-comment',
+                message: `${req.user.name} commented on your post "${post.title}"`,
+                blogId: postId,
+                commentId: comment._id
+            });
+        }
 
         res.status(201).json({
             success: true,
@@ -181,6 +195,9 @@ export const updateComment = async (req, res) => {
             `cache:/api/comments/post/${comment.post}`
         ]);
 
+        // Emit real-time update
+        socketService.emitCommentUpdate(comment.post, comment);
+
         res.json({
             success: true,
             message: 'Comment updated successfully',
@@ -229,6 +246,9 @@ export const deleteComment = async (req, res) => {
             `cache:/api/blogs/${postId}`,
             `cache:/api/comments/post/${postId}`
         ]);
+
+        // Emit real-time deletion
+        socketService.emitCommentDelete(postId, comment._id);
 
         res.json({
             success: true,

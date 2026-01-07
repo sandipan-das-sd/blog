@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import slugify from 'slugify';
 
 const blogSchema = new mongoose.Schema({
     title: {
@@ -6,6 +7,11 @@ const blogSchema = new mongoose.Schema({
         required: true,
         trim: true,
         maxlength: 200
+    },
+    slug: {
+        type: String,
+        unique: true,
+        lowercase: true
     },
     content: {
         type: String,
@@ -53,6 +59,25 @@ const blogSchema = new mongoose.Schema({
 blogSchema.index({ author: 1, createdAt: -1 });
 blogSchema.index({ isDeleted: 1, status: 1 });
 blogSchema.index({ tags: 1 });
+blogSchema.index({ slug: 1 });
+
+// Generate slug from title before saving
+blogSchema.pre('save', async function() {
+    if (this.isModified('title')) {
+        let baseSlug = slugify(this.title, { lower: true, strict: true });
+        this.slug = baseSlug;
+        
+        // Handle duplicate slugs by appending a timestamp
+        const existingBlog = await this.constructor.findOne({ 
+            slug: this.slug, 
+            _id: { $ne: this._id } 
+        });
+        
+        if (existingBlog) {
+            this.slug = `${baseSlug}-${Date.now()}`;
+        }
+    }
+});
 
 // Virtual for comments
 blogSchema.virtual('comments', {

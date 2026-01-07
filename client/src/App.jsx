@@ -5,6 +5,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import { AuthProvider } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
 
@@ -34,22 +35,24 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <AuthProvider>
-          <div className="min-h-screen bg-gray-50">
-            <Navbar />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/blogs" element={<BlogList />} />
-              <Route path="/blogs/:id" element={<BlogDetail />} />
-              <Route path="/blogs/:id/edit" element={<PrivateRoute><EditBlog /></PrivateRoute>} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/create-blog" element={<PrivateRoute><CreateBlog /></PrivateRoute>} />
-              <Route path="/my-blogs" element={<PrivateRoute><MyBlogs /></PrivateRoute>} />
-              <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-              <Route path="/admin/*" element={<PrivateRoute adminOnly><AdminDashboard /></PrivateRoute>} />
-            </Routes>
-            <ToastContainer position="top-right" autoClose={3000} />
-          </div>
+          <SocketProvider>
+            <div className="min-h-screen bg-gray-50">
+              <Navbar />
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/blogs" element={<BlogList />} />
+                <Route path="/blogs/:id" element={<BlogDetail />} />
+                <Route path="/blogs/:id/edit" element={<PrivateRoute><EditBlog /></PrivateRoute>} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/create-blog" element={<PrivateRoute><CreateBlog /></PrivateRoute>} />
+                <Route path="/my-blogs" element={<PrivateRoute><MyBlogs /></PrivateRoute>} />
+                <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+                <Route path="/admin/*" element={<PrivateRoute adminOnly><AdminDashboard /></PrivateRoute>} />
+              </Routes>
+              <ToastContainer position="top-right" autoClose={3000} />
+            </div>
+          </SocketProvider>
         </AuthProvider>
       </Router>
     </QueryClientProvider>
