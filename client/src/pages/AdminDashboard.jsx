@@ -15,7 +15,7 @@ const AdminDashboard = () => {
 
     const fetchStats = async () => {
         try {
-            const response = await adminAPI.getStats();
+            const response = await adminAPI.getDashboard();
             setStats(response.data.data);
         } catch (error) {
             toast.error('Failed to fetch statistics');
