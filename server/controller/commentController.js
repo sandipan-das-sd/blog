@@ -7,10 +7,17 @@ import socketService from '../services/socketService.js';
 export const createComment = async (req, res) => {
     try {
         const { content, parentComment } = req.body;
-        const postId = req.params.postId;
+        const identifier = req.params.postId;
+
+        // Check if identifier is a valid MongoDB ObjectId or a slug
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(identifier);
+        
+        const query = isObjectId 
+            ? { _id: identifier, isDeleted: false }
+            : { slug: identifier, isDeleted: false };
 
         // Check if post exists
-        const post = await Blog.findOne({ _id: postId, isDeleted: false });
+        const post = await Blog.findOne(query);
         if (!post) {
             return res.status(404).json({ 
                 success: false, 
@@ -21,7 +28,7 @@ export const createComment = async (req, res) => {
         // If replying to a comment, check if parent exists
         if (parentComment) {
             const parent = await Comment.findById(parentComment);
-            if (!parent || parent.post.toString() !== postId) {
+            if (!parent || parent.post.toString() !== post._id.toString()) {
                 return res.status(404).json({ 
                     success: false, 
                     message: 'Parent comment not found' 
@@ -32,7 +39,7 @@ export const createComment = async (req, res) => {
         const comment = await Comment.create({
             content,
             author: req.user._id,
-            post: postId,
+            post: post._id,
             parentComment: parentComment || null
         });
 
@@ -40,12 +47,12 @@ export const createComment = async (req, res) => {
 
         // Invalidate cache
         cacheService.invalidateCache([
-            `cache:/api/blogs/${postId}`,
-            `cache:/api/comments/post/${postId}`
+            `cache:/api/blogs/${post._id}`,
+            `cache:/api/comments/post/${post._id}`
         ]);
 
         // Emit real-time notification
-        socketService.emitNewComment(postId, comment);
+        socketService.emitNewComment(post._id, comment);
 
         // Notify blog author if comment is not from them
         if (post.author.toString() !== req.user._id.toString()) {
@@ -76,11 +83,18 @@ export const createComment = async (req, res) => {
 // Get comments for a post
 export const getCommentsByPost = async (req, res) => {
     try {
-        const { postId } = req.params;
+        const identifier = req.params.postId;
         const { page = 1, limit = 20 } = req.query;
 
+        // Check if identifier is a valid MongoDB ObjectId or a slug
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(identifier);
+        
+        const query = isObjectId 
+            ? { _id: identifier, isDeleted: false }
+            : { slug: identifier, isDeleted: false };
+
         // Check if post exists
-        const post = await Blog.findOne({ _id: postId, isDeleted: false });
+        const post = await Blog.findOne(query);
         if (!post) {
             return res.status(404).json({ 
                 success: false, 
@@ -92,7 +106,7 @@ export const getCommentsByPost = async (req, res) => {
 
         // Get top-level comments (not replies)
         const comments = await Comment.find({ 
-            post: postId, 
+            post: post._id, 
             parentComment: null 
         })
         .populate('author', 'username name avatar')
@@ -106,7 +120,7 @@ export const getCommentsByPost = async (req, res) => {
         .skip(skip);
 
         const total = await Comment.countDocuments({ 
-            post: postId, 
+            post: post._id, 
             parentComment: null 
         });
 

@@ -77,7 +77,7 @@ const BlogList = () => {
                 {blogs.map((blog) => (
                     <Link 
                         key={blog._id} 
-                        to={`/blogs/${blog._id}`}
+                        to={`/blogs/${blog.slug || blog._id}`}
                         className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow block"
                     >
                         {blog.coverImage && (

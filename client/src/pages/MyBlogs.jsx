@@ -163,7 +163,7 @@ const MyBlogs = () => {
                                 </div>
                                 <div className="flex gap-2 ml-4">
                                     <Link
-                                        to={`/blogs/${blog._id}`}
+                                        to={`/blogs/${blog.slug || blog._id}`}
                                         className="p-2 text-gray-600 hover:text-blue-600"
                                         title="View"
                                     >

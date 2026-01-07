@@ -172,7 +172,7 @@ const Overview = ({ stats }) => {
                     <div className="space-y-3">
                         {stats.recentBlogs && stats.recentBlogs.map((blog) => (
                             <div key={blog._id} className="py-2 border-b">
-                                <Link to={`/blogs/${blog._id}`} className="font-medium text-blue-600 hover:underline">
+                                <Link to={`/blogs/${blog.slug || blog._id}`} className="font-medium text-blue-600 hover:underline">
                                     {blog.title}
                                 </Link>
                                 <p className="text-sm text-gray-500">By {blog.author.name}</p>
