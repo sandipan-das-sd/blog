@@ -355,7 +355,7 @@ MIT License
 
 ## 👨‍💻 Author
 
-Your Name
+Sandipan Das
 
 ## 🤝 Contributing
 
